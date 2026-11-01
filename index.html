@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>S.R. ENGINEERING — Quotation CRM</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script>
+  tailwind.config = {
+    theme: { extend: {
+      colors: {
+        brand: { 50:'#eff6ff',100:'#dbeafe',400:'#60a5fa',500:'#3b82f6',600:'#2563eb',700:'#1d4ed8',900:'#1e3a8a' },
+        dark: { bg:'#0b0f19', surface:'#111827', card:'#1a2234', border:'#243049' }
+      },
+      fontFamily: { sans:['Inter','sans-serif'], heading:['Space Grotesk','sans-serif'] }
+    } }
+  }
+</script>
+<style>
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:#0b0f19}
+  ::-webkit-scrollbar-thumb{background:#243049;border-radius:3px}
+  .glass-card{background:rgba(26,34,52,.75);backdrop-filter:blur(12px);border:1px solid rgba(36,48,73,.8)}
+  .letterhead-bg{background:#fff;color:#1e293b;font-family:'Inter',sans-serif}
+  input[type=date]{color-scheme:dark;position:relative;padding-right:2.5rem;cursor:pointer}
+  input[type=date]::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+  .avoid-break{break-inside:avoid;page-break-inside:avoid}
+  #printableQuotation tr{break-inside:avoid;page-break-inside:avoid}
+
+  @page{size:A4;margin:10mm}
+  @media print{
+    aside, main, .no-print{display:none!important}
+    body{display:block!important;background:#fff!important}
+    #previewModal{position:static!important;display:block!important;background:#fff!important;padding:0!important;backdrop-filter:none!important}
+    #previewModal > div{max-height:none!important;border:0!important;box-shadow:none!important;background:#fff!important;border-radius:0!important;overflow:visible!important}
+    .modal-body{overflow:visible!important;padding:0!important;background:#fff!important}
+    #printableQuotation{max-width:none!important;border:0!important;box-shadow:none!important;padding:0!important;color:#000!important}
+  }
+</style>
+</head>
+<body class="bg-dark-bg text-gray-100 min-h-screen flex font-sans antialiased">
+
+  <!-- SIDEBAR -->
+  <aside class="w-64 bg-dark-surface border-r border-dark-border flex flex-col h-screen sticky top-0 z-30 shrink-0">
+    <div class="p-5 border-b border-dark-border flex items-center gap-3">
+      <img class="sr-logo w-12 h-12 rounded-xl object-cover shadow-lg shadow-brand-500/20 shrink-0" alt="S.R. Engineering logo">
+      <div>
+        <h1 class="font-heading font-bold text-base tracking-wide text-white">S.R. ENGINEERING</h1>
+        <p class="text-[10px] text-gray-400 tracking-wider uppercase">Industrial Maintenance CRM</p>
+      </div>
+    </div>
+
+    <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
+      <div class="px-3 text-[10px] uppercase tracking-wider font-semibold text-gray-400 mb-2">Main Menu</div>
+      <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-gray-100 hover:bg-dark-card border border-transparent">
+        <i class="fa-solid fa-chart-pie w-5 text-center"></i> Dashboard
+      </button>
+      <button onclick="newQuotation()" id="nav-generator" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-gray-100 hover:bg-dark-card border border-transparent">
+        <i class="fa-solid fa-file-circle-plus w-5 text-center"></i> Create Quotation
+      </button>
+      <button onclick="switchTab('quotations')" id="nav-quotations" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-gray-100 hover:bg-dark-card border border-transparent">
+        <i class="fa-solid fa-file-invoice-dollar w-5 text-center"></i> All Quotations
+        <span id="quotationCountBadge" class="ml-auto bg-brand-600 text-white text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+      </button>
+
+      <div class="px-3 text-[10px] uppercase tracking-wider font-semibold text-gray-400 mt-6 mb-2">Client Directories</div>
+      <button onclick="switchTab('clients')" id="nav-clients" class="nav-link w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all text-gray-400 hover:text-gray-100 hover:bg-dark-card border border-transparent">
+        <i class="fa-solid fa-building w-5 text-center"></i> Industrial Clients
+      </button>
+    </nav>
+
+    <div class="p-4 border-t border-dark-border bg-dark-card/50 text-xs text-gray-400">
+      <div class="flex items-center gap-2 text-gray-300 font-semibold mb-1"><i class="fa-solid fa-location-dot text-brand-500"></i> Raipur (C.G.)</div>
+      <p class="text-[11px] text-gray-500">GST: 22APZPR2492D1ZI</p>
+      <p class="text-[11px] text-gray-500">Mob: +91 8668503437</p>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+    <header class="sticky top-0 z-20 bg-dark-surface/80 backdrop-blur-md border-b border-dark-border px-8 py-4 flex items-center justify-between">
+      <div>
+        <h2 id="headerTitle" class="font-heading text-xl font-bold text-white">Dashboard Overview</h2>
+        <p class="text-xs text-gray-400">Manage plant maintenance quotations & client dispatch</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <button onclick="newQuotation()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-lg shadow-brand-600/30 transition flex items-center gap-2">
+          <i class="fa-solid fa-plus"></i> New Quotation
+        </button>
+        <button onclick="exportAllJSON()" class="px-3 py-2 bg-dark-card hover:bg-dark-border text-gray-300 text-xs font-medium rounded-lg border border-dark-border transition flex items-center gap-2">
+          <i class="fa-solid fa-database"></i> Backup Data
+        </button>
+      </div>
+    </header>
+
+    <div class="p-8 flex-1 space-y-6">
+
+      <!-- DASHBOARD -->
+      <section id="page-dashboard" class="page-content space-y-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
+            <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Total Quotation Value</div>
+            <div id="statTotalValue" class="font-heading text-2xl font-bold text-white">₹0</div>
+            <div class="text-xs text-emerald-400 mt-2 flex items-center gap-1 font-medium"><i class="fa-solid fa-arrow-trend-up"></i> Excl. GST</div>
+            <div class="absolute -right-2 -bottom-2 opacity-10 text-brand-500 text-6xl"><i class="fa-solid fa-sack-dollar"></i></div>
+          </div>
+          <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
+            <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Quotations Issued</div>
+            <div id="statCount" class="font-heading text-2xl font-bold text-white">0</div>
+            <div class="text-xs text-blue-400 mt-2 flex items-center gap-1 font-medium"><i class="fa-solid fa-industry"></i> Coal gasifier maintenance</div>
+            <div class="absolute -right-2 -bottom-2 opacity-10 text-blue-500 text-6xl"><i class="fa-solid fa-gears"></i></div>
+          </div>
+          <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
+            <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Advance Due at Work Order</div>
+            <div id="statAdvanceTotal" class="font-heading text-2xl font-bold text-emerald-400">₹0</div>
+            <div class="text-xs text-gray-400 mt-2">Sum of advance on all quotes</div>
+            <div class="absolute -right-2 -bottom-2 opacity-10 text-emerald-500 text-6xl"><i class="fa-solid fa-vault"></i></div>
+          </div>
+          <div class="glass-card p-5 rounded-2xl relative overflow-hidden">
+            <div class="text-gray-400 text-xs font-medium uppercase tracking-wider mb-1">Clients</div>
+            <div id="statClients" class="font-heading text-2xl font-bold text-purple-400">0</div>
+            <div class="text-xs text-purple-400 mt-2">Unique companies quoted</div>
+            <div class="absolute -right-2 -bottom-2 opacity-10 text-purple-500 text-6xl"><i class="fa-solid fa-building"></i></div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 glass-card rounded-2xl p-6">
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h3 class="font-heading text-lg font-bold text-white">Recent Quotations</h3>
+                <p class="text-xs text-gray-400">Preview, share on WhatsApp or download PDF</p>
+              </div>
+              <button onclick="switchTab('quotations')" class="text-xs text-brand-500 hover:text-brand-400 font-semibold">View All →</button>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-left text-sm">
+                <thead class="text-xs uppercase bg-dark-surface/60 text-gray-400 border-b border-dark-border">
+                  <tr>
+                    <th class="py-3 px-4">Ref No / Client</th>
+                    <th class="py-3 px-4">Scope of Work</th>
+                    <th class="py-3 px-4">Amount</th>
+                    <th class="py-3 px-4 text-right">Quick Dispatch</th>
+                  </tr>
+                </thead>
+                <tbody id="dashboardRecentQuotes" class="divide-y divide-dark-border text-gray-300"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="space-y-6">
+            <div class="glass-card rounded-2xl p-6 bg-gradient-to-br from-dark-card to-dark-surface">
+              <h3 class="font-heading text-base font-bold text-white mb-3 flex items-center gap-2"><i class="fa-solid fa-building-columns text-brand-500"></i> Bank Details</h3>
+              <div class="space-y-2 text-xs bg-dark-bg p-4 rounded-xl border border-dark-border">
+                <div class="flex justify-between"><span class="text-gray-400">Account Name:</span> <span class="font-semibold text-gray-200">S. R. ENGINEERING</span></div>
+                <div class="flex justify-between"><span class="text-gray-400">Bank:</span> <span class="font-semibold text-gray-200">Canara Bank</span></div>
+                <div class="flex justify-between"><span class="text-gray-400">Account No:</span> <span class="font-mono font-semibold text-brand-400">120029898523</span></div>
+                <div class="flex justify-between"><span class="text-gray-400">IFSC Code:</span> <span class="font-mono font-semibold text-gray-200">CNRB0005307</span></div>
+              </div>
+            </div>
+            <div class="glass-card rounded-2xl p-6">
+              <h3 class="font-heading text-base font-bold text-white mb-2">Export Data</h3>
+              <p class="text-xs text-gray-400 mb-4">Download for audit or backup</p>
+              <div class="flex flex-col gap-2">
+                <button onclick="exportCSV()" class="w-full py-2.5 px-4 bg-dark-surface hover:bg-dark-border border border-dark-border text-xs text-gray-200 font-semibold rounded-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-file-csv text-emerald-400"></i> Export All Quotes as CSV</button>
+                <button onclick="exportAllJSON()" class="w-full py-2.5 px-4 bg-dark-surface hover:bg-dark-border border border-dark-border text-xs text-gray-200 font-semibold rounded-lg transition flex items-center justify-center gap-2"><i class="fa-solid fa-code text-blue-400"></i> Download Backup (JSON)</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- CREATOR -->
+      <section id="page-generator" class="page-content space-y-6 hidden">
+        <div class="glass-card rounded-2xl p-6">
+          <div class="flex items-center justify-between pb-4 mb-6 border-b border-dark-border">
+            <div>
+              <h3 id="formTitle" class="font-heading text-lg font-bold text-white">Create New Quotation</h3>
+              <p class="text-xs text-gray-400">Client details, scope items and payment terms</p>
+            </div>
+            <button type="button" onclick="resetForm()" class="px-3 py-1.5 text-xs bg-gray-800 text-gray-300 hover:text-white rounded-lg">Reset Form</button>
+          </div>
+
+          <form id="quotationForm" onsubmit="saveQuotation(event)" class="space-y-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Ref No.</label>
+                <input type="text" id="qRefNo" required class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Date</label>
+                <div class="relative">
+                  <input type="date" id="qDate" required onclick="try{this.showPicker()}catch(e){}" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+                  <i class="fa-regular fa-calendar-days absolute right-3 top-1/2 -translate-y-1/2 text-brand-400 pointer-events-none"></i>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Addressed To</label>
+                <input type="text" id="qAddressTo" placeholder="The Manager" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              </div>
+              <div class="md:col-span-1">
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Client Company Name</label>
+                <input type="text" id="qClientName" required placeholder="e.g. SMW ISPAT PVT. LTD." class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              </div>
+              <div class="md:col-span-1">
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Client Address</label>
+                <input type="text" id="qClientAddress" required placeholder="MIDC, Deoli, Maharashtra-442101" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              </div>
+              <div class="md:col-span-1">
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Kind Attention</label>
+                <input type="text" id="qAttention" placeholder="Concerned Person" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              </div>
+              <div class="md:col-span-3">
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Subject of Quotation</label>
+                <input type="text" id="qSubject" required placeholder="Quotation for Coal Gasifier Maintenance – Erection and Dismantling" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-500">
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <h4 class="text-sm font-bold text-brand-400 uppercase tracking-wider">A. Scope & Price</h4>
+                <button type="button" onclick="addScopeRow()" class="px-3 py-1 bg-brand-600/20 hover:bg-brand-600/40 text-brand-400 border border-brand-500/30 text-xs font-semibold rounded-lg flex items-center gap-1"><i class="fa-solid fa-plus"></i> Add Item</button>
+              </div>
+              <div id="scopeRowsContainer" class="space-y-3"></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 bg-dark-bg p-4 rounded-xl border border-dark-border">
+              <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Amount in Words <span class="normal-case text-gray-500">(auto — editable)</span></label>
+                <input type="text" id="qAmountWords" oninput="wordsEdited = this.value.trim() !== ''" class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Total Amount (₹)</label>
+                <input type="number" id="qTotalAmount" readonly class="w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-2 text-sm text-emerald-400 font-bold font-mono">
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Advance Payment %</label>
+                <input type="number" id="qAdvancePct" value="30" min="0" max="100" step="any" oninput="calculateTot()" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+                <p id="advPreview" class="text-[11px] text-gray-500 mt-1"></p>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Work Completion Duration</label>
+                <input type="text" id="qDuration" placeholder="e.g. two (2) months and fifteen (15) days" class="w-full bg-dark-bg border border-dark-border rounded-lg px-3 py-2 text-sm text-white">
+              </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 pt-4 border-t border-dark-border">
+              <button type="button" onclick="switchTab('quotations')" class="px-4 py-2 bg-dark-surface hover:bg-dark-border text-gray-300 text-xs font-semibold rounded-lg">Cancel</button>
+              <button type="submit" class="px-6 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-lg shadow-brand-600/30"><i class="fa-solid fa-floppy-disk"></i> Save & Preview</button>
+            </div>
+          </form>
+        </div>
+      </section>
+
+      <!-- ALL QUOTATIONS -->
+      <section id="page-quotations" class="page-content space-y-6 hidden">
+        <div class="glass-card rounded-2xl p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 class="font-heading text-lg font-bold text-white">Quotations Register</h3>
+              <p class="text-xs text-gray-400">Search, edit, preview, or share via WhatsApp</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <input type="text" id="quoteSearch" oninput="renderFullQuotationTable()" placeholder="Search Ref / Client / Scope..." class="bg-dark-bg border border-dark-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500 w-48 sm:w-64">
+              <button onclick="exportCSV()" class="px-3 py-1.5 bg-dark-surface hover:bg-dark-border text-gray-300 text-xs font-medium rounded-lg border border-dark-border transition"><i class="fa-solid fa-file-excel text-emerald-400"></i> Export CSV</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+              <thead class="text-xs uppercase bg-dark-surface/60 text-gray-400 border-b border-dark-border">
+                <tr>
+                  <th class="py-3.5 px-4">Ref No / Date</th>
+                  <th class="py-3.5 px-4">Client</th>
+                  <th class="py-3.5 px-4">Subject</th>
+                  <th class="py-3.5 px-4">Total</th>
+                  <th class="py-3.5 px-4">Duration</th>
+                  <th class="py-3.5 px-4 text-center">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="fullQuotationTable" class="divide-y divide-dark-border text-gray-300"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- CLIENTS -->
+      <section id="page-clients" class="page-content space-y-6 hidden">
+        <div class="glass-card rounded-2xl p-6">
+          <h3 class="font-heading text-lg font-bold text-white mb-2">Industrial Client Registry</h3>
+          <p class="text-xs text-gray-400 mb-6">Built automatically from your quotations</p>
+          <div id="clientCardsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6"></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- PREVIEW MODAL -->
+  <div id="previewModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div class="bg-dark-surface border border-dark-border w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
+      <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between no-print bg-dark-card">
+        <div class="flex items-center gap-2"><i class="fa-solid fa-file-invoice text-brand-500"></i><h3 class="font-heading font-bold text-white text-base">Quotation Preview</h3></div>
+        <div class="flex items-center gap-2">
+          <button onclick="shareCurrentWhatsApp()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
+          <button onclick="downloadPDF()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+          <button onclick="window.print()" class="px-3 py-1.5 bg-dark-surface border border-dark-border hover:bg-dark-border text-gray-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-solid fa-print"></i> Print</button>
+          <button onclick="closePreview()" class="text-gray-400 hover:text-white px-2 py-1 text-lg">✕</button>
+        </div>
+      </div>
+
+      <div class="modal-body p-6 overflow-y-auto flex-1 bg-gray-50 text-slate-800">
+        <div id="printableQuotation" class="letterhead-bg p-8 max-w-3xl mx-auto shadow-sm border border-gray-200 text-xs leading-relaxed space-y-4">
+          <div class="border-b-2 border-slate-800 pb-3 avoid-break flex items-center gap-4">
+            <img class="sr-logo w-20 h-20 object-cover rounded-md shrink-0" alt="S.R. Engineering logo">
+            <div class="flex-1 text-center pr-20">
+              <h1 class="text-2xl font-bold tracking-wider text-slate-900 uppercase font-heading">S.R. ENGINEERING</h1>
+              <p class="text-[11px] text-slate-600 font-medium">KBT-51, Phase-1, Kabir Nagar, Near AIMS Residency, Raipur (C.G.) – 492099</p>
+              <p class="text-[11px] text-slate-700 font-semibold mt-0.5">GST No.: 22APZPR2492D1ZI | PAN No.: APZPR2492D | Mob.: 8668503437</p>
+            </div>
+          </div>
+
+          <div class="text-center py-1"><span class="text-sm font-bold tracking-widest text-slate-900 border-b border-slate-900 px-4 pb-0.5">QUOTATION</span></div>
+
+          <div class="flex justify-between items-start font-medium text-slate-800 avoid-break">
+            <div>
+              <p><strong>Ref. No.:</strong> <span id="pRef"></span></p>
+              <p class="mt-2"><strong>To,</strong></p>
+              <p id="pAddressTo" class="text-slate-800"></p>
+              <p class="font-bold text-slate-900" id="pClientName"></p>
+              <p id="pClientAddress" class="max-w-xs text-slate-700"></p>
+              <p class="mt-1"><strong>Kind Attention:</strong> <span id="pAttention"></span></p>
+            </div>
+            <div class="text-right"><p><strong>Date:</strong> <span id="pDate"></span></p></div>
+          </div>
+
+          <div class="avoid-break"><p class="font-bold text-slate-900"><strong>Subject:</strong> <span id="pSubject"></span></p></div>
+
+          <div class="avoid-break">
+            <p>Dear Sir/Madam,</p>
+            <p class="mt-1">With reference to the above subject, we are pleased to submit our quotation for the following work at your plant, on the terms and conditions stated below.</p>
+          </div>
+
+          <div>
+            <p class="font-bold text-slate-900 mb-1">A. Scope and Price</p>
+            <table class="w-full border-collapse border border-slate-400 text-xs">
+              <thead>
+                <tr class="bg-slate-100 text-slate-900">
+                  <th class="border border-slate-400 px-2 py-1.5 w-12 text-center">S. No.</th>
+                  <th class="border border-slate-400 px-3 py-1.5 text-left">Description of Work</th>
+                  <th class="border border-slate-400 px-3 py-1.5 w-32 text-right">Amount (Rs.)</th>
+                </tr>
+              </thead>
+              <tbody id="pScopeTableBody"></tbody>
+              <tfoot>
+                <tr class="font-bold bg-slate-100 text-slate-900">
+                  <td colspan="2" class="border border-slate-400 px-3 py-1.5 text-right">TOTAL AMOUNT</td>
+                  <td id="pTotalAmount" class="border border-slate-400 px-3 py-1.5 text-right font-mono"></td>
+                </tr>
+              </tfoot>
+            </table>
+            <p class="mt-1 font-semibold">Amount in words: <span id="pAmountWords"></span></p>
+            <p class="text-[11px] text-slate-600">Taxes: GST extra as applicable.</p>
+          </div>
+
+          <div class="avoid-break">
+            <p class="font-bold text-slate-900 mb-1">B. Payment Schedule</p>
+            <ul id="pPaymentSchedule" class="list-disc pl-5 space-y-0.5 text-slate-700"></ul>
+          </div>
+
+          <div class="avoid-break">
+            <p class="font-bold text-slate-900 mb-1">C. Terms and Conditions</p>
+            <ul class="list-disc pl-5 space-y-0.5 text-slate-700">
+              <li>All tools and tackles will be provided by the Company.</li>
+              <li>Lodging will be provided by the Company.</li>
+              <li>The Contractor will provide manpower only (skilled and non-skilled).</li>
+              <li>Medical facilities and safety arrangements will be provided by the Company.</li>
+              <li>All safety tools and PPE will be provided by the Company.</li>
+              <li>This quotation is valid for 30 days from the date of issue.</li>
+              <li>It will take <span id="pDuration"></span> to complete the work.</li>
+            </ul>
+          </div>
+
+          <div class="avoid-break">
+            <p class="font-bold text-slate-900 mb-1">D. Bank Details</p>
+            <table class="w-full max-w-md border-collapse border border-slate-400 text-xs">
+              <tr><td class="border border-slate-400 px-2 py-1 font-semibold bg-slate-50 w-32">Account Name</td><td class="border border-slate-400 px-2 py-1">S. R. ENGINEERING</td></tr>
+              <tr><td class="border border-slate-400 px-2 py-1 font-semibold bg-slate-50">Bank</td><td class="border border-slate-400 px-2 py-1">Canara Bank</td></tr>
+              <tr><td class="border border-slate-400 px-2 py-1 font-semibold bg-slate-50">Account No.</td><td class="border border-slate-400 px-2 py-1 font-mono">120029898523</td></tr>
+              <tr><td class="border border-slate-400 px-2 py-1 font-semibold bg-slate-50">IFSC Code</td><td class="border border-slate-400 px-2 py-1 font-mono">CNRB0005307</td></tr>
+            </table>
+          </div>
+
+          <div class="pt-4 flex justify-between items-end avoid-break">
+            <div>
+              <p>We look forward to your valued order and assure you of our best services at all times.</p>
+              <p class="mt-2">Thanking you,</p>
+              <p class="font-semibold">Yours faithfully,</p>
+            </div>
+            <div class="text-right">
+              <p class="font-bold text-slate-900">For S.R. ENGINEERING</p>
+              <div class="h-14"></div>
+              <p class="font-semibold text-slate-800">Authorised Signatory</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // ───────── Logo (embedded so the file works offline) ─────────
+  const LOGO = 'data:image/jpeg;base64,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';
+  function applyLogo() {
+    document.querySelectorAll('.sr-logo').forEach(i => i.src = LOGO);
+    const fav = document.createElement('link'); fav.rel = 'icon'; fav.href = LOGO; document.head.appendChild(fav);
+  }
+
+  // ───────── Data ─────────
+  const STORE_KEY = 'sr_engineering_quotes_v2';   // new key → old test data is ignored
+  const SEED = [
+    {
+      id: 'Q-SR-001', refNo: 'SRE/2026/SMW-01', date: '2026-02-15',
+      addressTo: 'The Manager', clientName: 'SMW ISPAT PVT. LTD.', clientAddress: 'MIDC, Deoli, Maharashtra-442101',
+      attention: 'Concerned Person',
+      subject: 'Quotation for Coal Gasifier Maintenance – Erection and Dismantling of 3.6 Dia Shell Hot-Gasifier. (2 Plant)',
+      items: [
+        { sno: 1, desc: 'Dismantling 3.6 Dia Hot Gasifier (No. of 2 Plant)', amount: 700000, subItems: [] },
+        { sno: 2, desc: 'Erection of 3.6 Dia-Hot Gasifier (No. of 1 Plant)', amount: 800000, subItems: [] }
+      ],
+      totalAmount: 1500000, amountWords: 'Rupees Fifteen Lakh Only.',
+      advancePct: 30, advanceAmt: 450000, balanceAmt: 1050000,
+      duration: 'two months and fifteen (15) days'
+    },
+    {
+      id: 'Q-SR-002', refNo: 'SRE/2026/SANVIJAY-02', date: '2026-02-18',
+      addressTo: 'The Manager', clientName: 'SANVIJAY ROLLING & ENGG. LTD. (Unit B2R)', clientAddress: 'MIDC, Bori, Maharashtra-441122',
+      attention: 'Concerned Person',
+      subject: 'Quotation for Coal Gasifier Maintenance – Erection, Dismantling and Fabrication.',
+      items: [
+        { sno: 1, desc: 'Gasifier Parts Dismantling & Erection', amount: 750000, subItems: [
+          'Fire Grate Dismantling & Erection','Skirt Plate Dismantling & Erection','Big Knife Dismantling & Fitting',
+          'Small Knife Dismantling & Fitting','Man, Safety Bypass Dismantling & Erection' ] },
+        { sno: 2, desc: 'Gasifier Maintenance Fabrication', amount: 520000, subItems: [
+          'Fire Grate (Mandir), Fabrication 01 Set','Fire Grate Tool, Fabrication 01 Set','Skirt Plate Fabrication 01 Set',
+          'Skirt Flange 3600 – 02 Pair','Skirt Flange Vertical – 04 Pair','Big Knife Fabrication – 01 Pair',
+          'Small Knife Fabrication 04 Nos.','Man, Safety Bypass Fabrication 01 Set' ] }
+      ],
+      totalAmount: 1270000, amountWords: 'Rupees Twelve Lakhs Seventy Thousand Only.',
+      advancePct: 30, advanceAmt: 381000, balanceAmt: 889000,
+      duration: 'two (2) months'
+    }
+  ];
+
+  let quotations = [];
+  let currentQuotationForPreview = null;
+  let editingId = null;
+  let wordsEdited = false;
+
+  // ───────── Helpers ─────────
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const inr = n => Number(n || 0).toLocaleString('en-IN');
+  const fmtDate = iso => { const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || ''); return m ? `${m[3]}/${m[2]}/${m[1]}` : (iso || ''); };
+  const todayISO = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+
+  // Indian-system number to words
+  function numToWords(num) {
+    num = Math.round(Number(num) || 0);
+    if (num === 0) return 'Zero';
+    const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+    const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+    const two = n => n < 20 ? ones[n] : tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '');
+    const three = n => (n >= 100 ? ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' : '') : '') + (n%100 ? two(n%100) : '');
+    const parts = [];
+    const crore = Math.floor(num / 10000000); num %= 10000000;
+    const lakh  = Math.floor(num / 100000);   num %= 100000;
+    const thou  = Math.floor(num / 1000);     num %= 1000;
+    if (crore) parts.push(three(crore) + ' Crore');
+    if (lakh)  parts.push(two(lakh) + ' Lakh');
+    if (thou)  parts.push(two(thou) + ' Thousand');
+    if (num)   parts.push(three(num));
+    return parts.join(' ');
+  }
+  const amountInWords = n => `Rupees ${numToWords(n)} Only.`;
+
+  function loadData() {
+    try { localStorage.removeItem('sr_engineering_quotes'); } catch(e){}   // drop old test data
+    try {
+      const saved = localStorage.getItem(STORE_KEY);
+      if (saved) { const parsed = JSON.parse(saved); if (Array.isArray(parsed)) { quotations = parsed; return; } }
+    } catch(e){}
+    quotations = JSON.parse(JSON.stringify(SEED));
+    saveToStorage();
+  }
+  function saveToStorage() {
+    try { localStorage.setItem(STORE_KEY, JSON.stringify(quotations)); } catch(e){}
+    document.getElementById('quotationCountBadge').textContent = quotations.length;
+  }
+
+  // ───────── Navigation ─────────
+  function switchTab(tabId) {
+    document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.nav-link').forEach(el => {
+      el.classList.remove('text-brand-500','bg-brand-500/10','border-brand-500/20');
+      el.classList.add('text-gray-400','border-transparent');
+    });
+    document.getElementById('page-' + tabId).classList.remove('hidden');
+    const nav = document.getElementById('nav-' + tabId);
+    if (nav) { nav.classList.remove('text-gray-400','border-transparent'); nav.classList.add('text-brand-500','bg-brand-500/10','border-brand-500/20'); }
+    document.getElementById('headerTitle').textContent = ({
+      dashboard:'Dashboard Overview', generator: editingId ? 'Edit Quotation' : 'Quotation Creator',
+      quotations:'All Quotations', clients:'Industrial Client Directory' })[tabId] || 'Dashboard';
+    if (tabId === 'dashboard') renderDashboard();
+    if (tabId === 'quotations') renderFullQuotationTable();
+    if (tabId === 'clients') renderClientsGrid();
+    document.querySelector('main').scrollTo({ top: 0 });
+  }
+
+  // ───────── Dashboard ─────────
+  function actionButtons(q, withEdit) {
+    return `
+      <button onclick="openPreview('${q.id}')" class="p-1.5 px-2 bg-brand-600/20 text-brand-400 hover:bg-brand-600 hover:text-white rounded text-xs transition" title="Preview"><i class="fa-solid fa-eye"></i></button>
+      <button onclick="shareWhatsAppDirect('${q.id}')" class="p-1.5 px-2 bg-emerald-600/20 text-emerald-400 hover:bg-emerald-600 hover:text-white rounded text-xs transition" title="Share on WhatsApp"><i class="fa-brands fa-whatsapp"></i></button>
+      ${withEdit ? `<button onclick="editQuotation('${q.id}')" class="p-1.5 px-2 bg-amber-600/20 text-amber-400 hover:bg-amber-600 hover:text-white rounded text-xs transition" title="Edit"><i class="fa-solid fa-pen"></i></button>
+      <button onclick="deleteQuotation('${q.id}')" class="p-1.5 px-2 text-gray-500 hover:text-red-400 text-xs" title="Delete"><i class="fa-solid fa-trash"></i></button>` : ''}`;
+  }
+
+  function renderDashboard() {
+    const totalVal = quotations.reduce((a, q) => a + (q.totalAmount || 0), 0);
+    const totalAdv = quotations.reduce((a, q) => a + (q.advanceAmt || 0), 0);
+    document.getElementById('statTotalValue').textContent = '₹' + inr(totalVal);
+    document.getElementById('statAdvanceTotal').textContent = '₹' + inr(totalAdv);
+    document.getElementById('statCount').textContent = quotations.length;
+    document.getElementById('statClients').textContent = new Set(quotations.map(q => q.clientName)).size;
+    document.getElementById('quotationCountBadge').textContent = quotations.length;
+
+    const tbody = document.getElementById('dashboardRecentQuotes');
+    tbody.innerHTML = quotations.length ? quotations.slice(0, 5).map(q => `
+      <tr class="hover:bg-dark-card/50 transition">
+        <td class="py-3 px-4"><div class="font-bold text-white text-xs">${esc(q.refNo)}</div><div class="text-[11px] text-gray-400">${esc(q.clientName)}</div></td>
+        <td class="py-3 px-4 text-xs text-gray-300 max-w-xs"><div class="truncate">${esc(q.subject)}</div></td>
+        <td class="py-3 px-4 font-mono font-semibold text-emerald-400 whitespace-nowrap">₹${inr(q.totalAmount)}</td>
+        <td class="py-3 px-4 text-right whitespace-nowrap">${actionButtons(q, false)}</td>
+      </tr>`).join('') : `<tr><td colspan="4" class="py-8 text-center text-xs text-gray-500">No quotations yet. Click “New Quotation”.</td></tr>`;
+  }
+
+  // ───────── Form ─────────
+  function addScopeRow(desc = '', amt = '', subItems = []) {
+    const container = document.getElementById('scopeRowsContainer');
+    const row = document.createElement('div');
+    row.className = 'scope-row bg-dark-bg p-3 rounded-xl border border-dark-border space-y-2';
+    row.innerHTML = `
+      <div class="flex flex-col md:flex-row gap-3 items-start md:items-center">
+        <span class="row-num text-xs font-bold text-gray-400 w-6"></span>
+        <input type="text" placeholder="Description of work" class="row-desc flex-1 w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-brand-500" required>
+        <input type="number" min="0" step="any" placeholder="Amount (₹)" class="row-amt w-full md:w-36 bg-dark-surface border border-dark-border rounded-lg px-3 py-1.5 text-xs text-emerald-400 font-mono focus:outline-none focus:border-brand-500" required>
+        <button type="button" class="row-del text-red-400 hover:text-red-300 p-1 text-xs" title="Remove row"><i class="fa-solid fa-trash"></i></button>
+      </div>
+      <textarea rows="2" placeholder="Optional sub-items — one per line (shown as 1), 2), 3)…)" class="row-sub w-full bg-dark-surface border border-dark-border rounded-lg px-3 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-brand-500"></textarea>`;
+    row.querySelector('.row-desc').value = desc;
+    row.querySelector('.row-amt').value = amt;
+    row.querySelector('.row-sub').value = (subItems || []).join('\n');
+    row.querySelector('.row-amt').addEventListener('input', calculateTot);
+    row.querySelector('.row-del').addEventListener('click', () => removeScopeRow(row));
+    container.appendChild(row);
+    renumberRows();
+    calculateTot();
+  }
+  function removeScopeRow(row) {
+    const c = document.getElementById('scopeRowsContainer');
+    if (c.children.length > 1) { row.remove(); renumberRows(); calculateTot(); }
+  }
+  function renumberRows() {
+    document.querySelectorAll('#scopeRowsContainer .row-num').forEach((el, i) => el.textContent = (i + 1) + '.');
+  }
+
+  function calculateTot() {
+    let total = 0;
+    document.querySelectorAll('.row-amt').forEach(i => total += parseFloat(i.value) || 0);
+    document.getElementById('qTotalAmount').value = total;
+    const pctRaw = parseFloat(document.getElementById('qAdvancePct').value);
+    const pct = isNaN(pctRaw) ? 30 : Math.min(100, Math.max(0, pctRaw));
+    const adv = Math.round(total * pct / 100);
+    document.getElementById('advPreview').textContent = total ? `Advance ₹${inr(adv)} · Balance ₹${inr(total - adv)}` : '';
+    if (!wordsEdited) document.getElementById('qAmountWords').value = total > 0 ? amountInWords(total) : '';
+  }
+
+  function nextRefNo() {
+    const yr = new Date().getFullYear();
+    let n = quotations.length + 1, ref;
+    do { ref = `SRE/${yr}/Q-${String(n).padStart(3, '0')}`; n++; } while (quotations.some(q => q.refNo === ref));
+    return ref;
+  }
+
+  function resetForm() {
+    editingId = null; wordsEdited = false;
+    document.getElementById('quotationForm').reset();
+    document.getElementById('scopeRowsContainer').innerHTML = '';
+    document.getElementById('qRefNo').value = nextRefNo();
+    document.getElementById('qDate').value = todayISO();
+    document.getElementById('qAddressTo').value = 'The Manager';
+    document.getElementById('qAttention').value = 'Concerned Person';
+    document.getElementById('qAdvancePct').value = 30;
+    document.getElementById('formTitle').textContent = 'Create New Quotation';
+    addScopeRow();
+  }
+  function newQuotation() { resetForm(); switchTab('generator'); }
+
+  function editQuotation(id) {
+    const q = quotations.find(x => x.id === id); if (!q) return;
+    resetForm();
+    editingId = id;
+    document.getElementById('scopeRowsContainer').innerHTML = '';
+    document.getElementById('formTitle').textContent = 'Edit Quotation — ' + q.refNo;
+    document.getElementById('qRefNo').value = q.refNo;
+    document.getElementById('qDate').value = q.date;
+    document.getElementById('qAddressTo').value = q.addressTo || '';
+    document.getElementById('qClientName').value = q.clientName;
+    document.getElementById('qClientAddress').value = q.clientAddress;
+    document.getElementById('qAttention').value = q.attention || '';
+    document.getElementById('qSubject').value = q.subject;
+    document.getElementById('qAdvancePct').value = q.advancePct;
+    document.getElementById('qDuration').value = q.duration || '';
+    q.items.forEach(it => addScopeRow(it.desc, it.amount, it.subItems));
+    wordsEdited = true;
+    document.getElementById('qAmountWords').value = q.amountWords || amountInWords(q.totalAmount);
+    calculateTot();
+    switchTab('generator');
+  }
+
+  function saveQuotation(e) {
+    e.preventDefault();
+    const items = [];
+    document.querySelectorAll('.scope-row').forEach(row => {
+      const desc = row.querySelector('.row-desc').value.trim();
+      const amount = parseFloat(row.querySelector('.row-amt').value) || 0;
+      const subItems = row.querySelector('.row-sub').value.split('\n').map(s => s.trim()).filter(Boolean);
+      if (desc) items.push({ sno: items.length + 1, desc, amount, subItems });
+    });
+    if (!items.length) { alert('Add at least one scope item.'); return; }
+
+    const total = items.reduce((a, i) => a + i.amount, 0);
+    const pctRaw = parseFloat(document.getElementById('qAdvancePct').value);
+    const advPct = isNaN(pctRaw) ? 30 : Math.min(100, Math.max(0, pctRaw));
+    const advAmt = Math.round(total * advPct / 100);
+    const refNo = document.getElementById('qRefNo').value.trim();
+
+    if (quotations.some(q => q.refNo === refNo && q.id !== editingId) &&
+        !confirm(`Ref No. "${refNo}" already exists. Save anyway?`)) return;
+
+    const data = {
+      id: editingId || 'Q-' + Date.now(),
+      refNo, date: document.getElementById('qDate').value,
+      addressTo: document.getElementById('qAddressTo').value.trim() || 'The Manager',
+      clientName: document.getElementById('qClientName').value.trim(),
+      clientAddress: document.getElementById('qClientAddress').value.trim(),
+      attention: document.getElementById('qAttention').value.trim() || 'Concerned Person',
+      subject: document.getElementById('qSubject').value.trim(),
+      items, totalAmount: total,
+      amountWords: document.getElementById('qAmountWords').value.trim() || amountInWords(total),
+      advancePct: advPct, advanceAmt: advAmt, balanceAmt: total - advAmt,
+      duration: document.getElementById('qDuration').value.trim() || 'the agreed period'
+    };
+
+    if (editingId) quotations = quotations.map(q => q.id === editingId ? data : q);
+    else quotations.unshift(data);
+    editingId = null;
+    saveToStorage();
+    switchTab('quotations');
+    openPreview(data.id);
+  }
+
+  // ───────── Register ─────────
+  function renderFullQuotationTable() {
+    const term = (document.getElementById('quoteSearch').value || '').toLowerCase().trim();
+    const list = quotations.filter(q => !term ||
+      [q.refNo, q.clientName, q.subject, ...q.items.map(i => i.desc)].join(' ').toLowerCase().includes(term));
+    document.getElementById('fullQuotationTable').innerHTML = list.length ? list.map(q => `
+      <tr class="hover:bg-dark-card/50 transition">
+        <td class="py-3.5 px-4"><div class="font-bold text-white text-xs">${esc(q.refNo)}</div><div class="text-[11px] text-gray-400">${fmtDate(q.date)}</div></td>
+        <td class="py-3.5 px-4"><div class="font-semibold text-gray-200 text-xs">${esc(q.clientName)}</div><div class="text-[11px] text-gray-400 truncate max-w-xs">${esc(q.clientAddress)}</div></td>
+        <td class="py-3.5 px-4 text-xs text-gray-300 max-w-xs"><p class="font-medium text-gray-200 truncate">${esc(q.subject)}</p><p class="text-[10px] text-gray-400">${q.items.length} scope item(s)</p></td>
+        <td class="py-3.5 px-4 font-mono font-bold text-emerald-400 text-xs whitespace-nowrap">₹${inr(q.totalAmount)}/-</td>
+        <td class="py-3.5 px-4 text-xs text-gray-300">${esc(q.duration)}</td>
+        <td class="py-3.5 px-4 text-center whitespace-nowrap">${actionButtons(q, true)}</td>
+      </tr>`).join('') : `<tr><td colspan="6" class="py-8 text-center text-xs text-gray-500">No quotations found.</td></tr>`;
+  }
+
+  function deleteQuotation(id) {
+    if (!confirm('Delete this quotation? This cannot be undone.')) return;
+    quotations = quotations.filter(q => q.id !== id);
+    saveToStorage(); renderDashboard(); renderFullQuotationTable();
+  }
+
+  // ───────── Preview ─────────
+  function openPreview(id) {
+    const q = quotations.find(x => x.id === id); if (!q) return;
+    currentQuotationForPreview = q;
+    const set = (i, v) => document.getElementById(i).textContent = v;
+    set('pRef', q.refNo); set('pDate', fmtDate(q.date));
+    set('pAddressTo', q.addressTo || 'The Manager');
+    set('pClientName', q.clientName); set('pClientAddress', q.clientAddress);
+    set('pAttention', q.attention || 'Concerned Person'); set('pSubject', q.subject);
+    set('pTotalAmount', 'Rs. ' + inr(q.totalAmount) + '/-');
+    set('pAmountWords', q.amountWords || amountInWords(q.totalAmount));
+    set('pDuration', q.duration || 'the agreed period');
+
+    document.getElementById('pScopeTableBody').innerHTML = q.items.map(item => `
+      <tr>
+        <td class="border border-slate-400 px-2 py-1.5 text-center align-top">${item.sno}</td>
+        <td class="border border-slate-400 px-3 py-1.5">
+          <div class="font-semibold text-slate-900">${esc(item.desc)}</div>
+          ${item.subItems && item.subItems.length ? `<div class="text-[11px] text-slate-600 mt-1 space-y-0.5">${item.subItems.map((s, i) => `<div>${i + 1}) ${esc(s)}</div>`).join('')}</div>` : ''}
+        </td>
+        <td class="border border-slate-400 px-3 py-1.5 text-right font-mono font-semibold text-slate-900 align-top">${inr(item.amount)}/-</td>
+      </tr>`).join('');
+
+    document.getElementById('pPaymentSchedule').innerHTML = `
+      <li>${q.advancePct}% advance (Rs. ${inr(q.advanceAmt)}/-) along with the work order.</li>
+      <li>Balance ${+(100 - q.advancePct).toFixed(2)}% (Rs. ${inr(q.balanceAmt)}/-) required on running work.</li>`;
+
+    const m = document.getElementById('previewModal');
+    m.classList.remove('hidden'); m.classList.add('flex');
+  }
+  function closePreview() {
+    const m = document.getElementById('previewModal');
+    m.classList.add('hidden'); m.classList.remove('flex');
+  }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+
+  // ───────── Share / Export ─────────
+  function shareWhatsAppDirect(id) {
+    const q = quotations.find(x => x.id === id); if (!q) return;
+    const text =
+      `*QUOTATION - S.R. ENGINEERING*\n----------------------------------------\n` +
+      `*Ref No:* ${q.refNo}\n*Date:* ${fmtDate(q.date)}\n*To:* ${q.clientName}\n*Subject:* ${q.subject}\n` +
+      `----------------------------------------\n` +
+      `*TOTAL AMOUNT:* ₹${inr(q.totalAmount)}/- (GST extra)\n*In Words:* ${q.amountWords}\n` +
+      `*Advance (${q.advancePct}%):* ₹${inr(q.advanceAmt)}/-\n*Work Duration:* ${q.duration}\n` +
+      `----------------------------------------\n*Bank Details:*\nS. R. ENGINEERING | Canara Bank\nA/c: 120029898523 | IFSC: CNRB0005307\n\n` +
+      `Contact: S.R. ENGINEERING (+91 8668503437)`;
+    window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+  }
+  function shareCurrentWhatsApp() { if (currentQuotationForPreview) shareWhatsAppDirect(currentQuotationForPreview.id); }
+
+  function downloadPDF() {
+    if (!currentQuotationForPreview) return;
+    const el = document.getElementById('printableQuotation');
+    html2pdf().set({
+      margin: [10, 10, 10, 10],
+      filename: `Quotation_${currentQuotationForPreview.refNo.replace(/[\/\\:*?"<>|\s]+/g, '_')}.pdf`,
+      image: { type: 'jpeg', quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+      jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+      pagebreak: { mode: ['css', 'legacy'], avoid: ['.avoid-break', 'tr'] }
+    }).from(el).save();
+  }
+
+  function download(blob, name) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+  function exportCSV() {
+    const c = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    let csv = 'Ref No,Date,Client Name,Client Address,Subject,Total Amount (INR),Advance %,Advance (INR),Duration\n';
+    quotations.forEach(q => csv += [c(q.refNo), c(fmtDate(q.date)), c(q.clientName), c(q.clientAddress), c(q.subject), q.totalAmount, q.advancePct, q.advanceAmt, c(q.duration)].join(',') + '\n');
+    download(new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' }), 'SR_Engineering_Quotations.csv');
+  }
+  function exportAllJSON() {
+    download(new Blob([JSON.stringify(quotations, null, 2)], { type: 'application/json' }), 'SR_Engineering_Data_Backup.json');
+  }
+
+  // ───────── Clients ─────────
+  function renderClientsGrid() {
+    const map = {};
+    quotations.forEach(q => { (map[q.clientName] = map[q.clientName] || { name: q.clientName, address: q.clientAddress, quotes: [] }).quotes.push(q); });
+    const clients = Object.values(map);
+    document.getElementById('clientCardsGrid').innerHTML = clients.length ? clients.map(c => `
+      <div class="glass-card p-5 rounded-xl">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-10 h-10 rounded-lg bg-brand-600/20 text-brand-400 flex items-center justify-center"><i class="fa-solid fa-industry"></i></div>
+          <div><h4 class="font-bold text-white text-sm">${esc(c.name)}</h4><p class="text-xs text-gray-400">${esc(c.address)}</p></div>
+        </div>
+        <div class="space-y-2 mt-4 pt-3 border-t border-dark-border text-xs">
+          <div class="text-gray-400 font-medium">Quotations:</div>
+          ${c.quotes.map(q => `
+            <div class="flex justify-between items-center bg-dark-bg p-2 rounded border border-dark-border">
+              <span class="font-mono text-gray-300">${esc(q.refNo)}</span>
+              <span class="font-bold text-emerald-400">₹${inr(q.totalAmount)}</span>
+            </div>`).join('')}
+        </div>
+      </div>`).join('') : '<p class="text-xs text-gray-500">No clients yet.</p>';
+  }
+
+  // ───────── Init ─────────
+  window.addEventListener('DOMContentLoaded', () => {
+    applyLogo();
+    loadData();
+    resetForm();
+    switchTab('dashboard');
+  });
+</script>
+</body>
+</html>
