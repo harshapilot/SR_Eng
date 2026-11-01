@@ -44,13 +44,15 @@
 <body class="bg-dark-bg text-gray-100 min-h-screen flex font-sans antialiased">
 
   <!-- SIDEBAR -->
-  <aside class="w-64 bg-dark-surface border-r border-dark-border flex flex-col h-screen sticky top-0 z-30 shrink-0">
+  <div id="sidebarOverlay" onclick="closeSidebar()" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden md:hidden"></div>
+  <aside id="sidebar" class="w-64 max-w-[80vw] bg-dark-surface border-r border-dark-border flex flex-col h-screen fixed md:sticky top-0 left-0 z-50 md:z-30 shrink-0 -translate-x-full md:translate-x-0 transition-transform duration-200 ease-out">
     <div class="p-5 border-b border-dark-border flex items-center gap-3">
       <img class="sr-logo w-12 h-12 rounded-xl object-cover shadow-lg shadow-brand-500/20 shrink-0" alt="S.R. Engineering logo">
       <div>
         <h1 class="font-heading font-bold text-base tracking-wide text-white">S.R. ENGINEERING</h1>
         <p class="text-[10px] text-gray-400 tracking-wider uppercase">Industrial Maintenance CRM</p>
       </div>
+      <button onclick="closeSidebar()" class="md:hidden ml-auto text-gray-400 hover:text-white text-lg px-2" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
     </div>
 
     <nav class="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -81,22 +83,25 @@
 
   <!-- MAIN -->
   <main class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
-    <header class="sticky top-0 z-20 bg-dark-surface/80 backdrop-blur-md border-b border-dark-border px-8 py-4 flex items-center justify-between">
-      <div>
-        <h2 id="headerTitle" class="font-heading text-xl font-bold text-white">Dashboard Overview</h2>
-        <p class="text-xs text-gray-400">Manage plant maintenance quotations & client dispatch</p>
+    <header class="sticky top-0 z-20 bg-dark-surface/80 backdrop-blur-md border-b border-dark-border px-4 md:px-8 py-3 md:py-4 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+      <button onclick="openSidebar()" class="md:hidden shrink-0 w-10 h-10 rounded-lg bg-dark-card border border-dark-border text-gray-200 hover:bg-dark-border flex items-center justify-center" aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+      <div class="min-w-0">
+        <h2 id="headerTitle" class="font-heading text-base md:text-xl font-bold text-white truncate">Dashboard Overview</h2>
+        <p class="text-xs text-gray-400 hidden sm:block">Manage plant maintenance quotations & client dispatch</p>
       </div>
-      <div class="flex items-center gap-3">
+      </div>
+      <div class="flex items-center gap-2 md:gap-3 shrink-0">
         <button onclick="newQuotation()" class="px-4 py-2 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg shadow-lg shadow-brand-600/30 transition flex items-center gap-2">
-          <i class="fa-solid fa-plus"></i> New Quotation
+          <i class="fa-solid fa-plus"></i> <span class="hidden sm:inline">New Quotation</span><span class="sm:hidden">New</span>
         </button>
         <button onclick="exportAllJSON()" class="px-3 py-2 bg-dark-card hover:bg-dark-border text-gray-300 text-xs font-medium rounded-lg border border-dark-border transition flex items-center gap-2">
-          <i class="fa-solid fa-database"></i> Backup Data
+          <i class="fa-solid fa-database"></i> <span class="hidden sm:inline">Backup Data</span>
         </button>
       </div>
     </header>
 
-    <div class="p-8 flex-1 space-y-6">
+    <div class="p-4 md:p-8 flex-1 space-y-6">
 
       <!-- DASHBOARD -->
       <section id="page-dashboard" class="page-content space-y-6">
@@ -301,23 +306,23 @@
   </main>
 
   <!-- PREVIEW MODAL -->
-  <div id="previewModal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+  <div id="previewModal" class="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm hidden items-center justify-center p-2 sm:p-4">
     <div class="bg-dark-surface border border-dark-border w-full max-w-4xl rounded-2xl overflow-hidden shadow-2xl flex flex-col max-h-[92vh]">
-      <div class="px-6 py-4 border-b border-dark-border flex items-center justify-between no-print bg-dark-card">
-        <div class="flex items-center gap-2"><i class="fa-solid fa-file-invoice text-brand-500"></i><h3 class="font-heading font-bold text-white text-base">Quotation Preview</h3></div>
+      <div class="px-4 md:px-6 py-3 md:py-4 border-b border-dark-border flex items-center justify-between gap-2 no-print bg-dark-card">
+        <div class="flex items-center gap-2"><i class="fa-solid fa-file-invoice text-brand-500"></i><h3 class="font-heading font-bold text-white text-sm md:text-base hidden sm:block">Quotation Preview</h3></div>
         <div class="flex items-center gap-2">
-          <button onclick="shareCurrentWhatsApp()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-brands fa-whatsapp"></i> WhatsApp</button>
-          <button onclick="downloadPDF()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-solid fa-file-pdf"></i> PDF</button>
-          <button onclick="window.print()" class="px-3 py-1.5 bg-dark-surface border border-dark-border hover:bg-dark-border text-gray-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-solid fa-print"></i> Print</button>
+          <button onclick="shareCurrentWhatsApp()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-brands fa-whatsapp"></i> <span class="hidden sm:inline">WhatsApp</span></button>
+          <button onclick="downloadPDF()" class="px-3 py-1.5 bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-solid fa-file-pdf"></i> <span>PDF</span></button>
+          <button onclick="window.print()" class="px-3 py-1.5 bg-dark-surface border border-dark-border hover:bg-dark-border text-gray-200 text-xs font-semibold rounded-lg flex items-center gap-1.5 transition"><i class="fa-solid fa-print"></i> <span class="hidden sm:inline">Print</span></button>
           <button onclick="closePreview()" class="text-gray-400 hover:text-white px-2 py-1 text-lg">✕</button>
         </div>
       </div>
 
-      <div class="modal-body p-6 overflow-y-auto flex-1 bg-gray-50 text-slate-800">
-        <div id="printableQuotation" class="letterhead-bg p-8 max-w-3xl mx-auto shadow-sm border border-gray-200 text-xs leading-relaxed space-y-4">
+      <div class="modal-body p-2 sm:p-6 overflow-y-auto flex-1 bg-gray-50 text-slate-800">
+        <div id="printableQuotation" class="letterhead-bg p-4 sm:p-8 max-w-3xl mx-auto shadow-sm border border-gray-200 text-xs leading-relaxed space-y-4">
           <div class="border-b-2 border-slate-800 pb-3 avoid-break flex items-center gap-4">
-            <img class="sr-logo w-20 h-20 object-cover rounded-md shrink-0" alt="S.R. Engineering logo">
-            <div class="flex-1 text-center pr-20">
+            <img class="sr-logo w-14 h-14 sm:w-20 sm:h-20 object-cover rounded-md shrink-0" alt="S.R. Engineering logo">
+            <div class="flex-1 text-center sm:pr-20">
               <h1 class="text-2xl font-bold tracking-wider text-slate-900 uppercase font-heading">S.R. ENGINEERING</h1>
               <p class="text-[11px] text-slate-600 font-medium">KBT-51, Phase-1, Kabir Nagar, Near AIMS Residency, Raipur (C.G.) – 492099</p>
               <p class="text-[11px] text-slate-700 font-semibold mt-0.5">GST No.: 22APZPR2492D1ZI | PAN No.: APZPR2492D | Mob.: 8668503437</p>
@@ -502,7 +507,16 @@
   }
 
   // ───────── Navigation ─────────
+  function openSidebar() {
+    document.getElementById('sidebar').classList.remove('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.remove('hidden');
+  }
+  function closeSidebar() {
+    document.getElementById('sidebar').classList.add('-translate-x-full');
+    document.getElementById('sidebarOverlay').classList.add('hidden');
+  }
   function switchTab(tabId) {
+    closeSidebar();
     document.querySelectorAll('.page-content').forEach(el => el.classList.add('hidden'));
     document.querySelectorAll('.nav-link').forEach(el => {
       el.classList.remove('text-brand-500','bg-brand-500/10','border-brand-500/20');
@@ -730,7 +744,8 @@
     const m = document.getElementById('previewModal');
     m.classList.add('hidden'); m.classList.remove('flex');
   }
-  document.addEventListener('keydown', e => { if (e.key === 'Escape') closePreview(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { closePreview(); closeSidebar(); } });
+  window.addEventListener('resize', () => { if (window.innerWidth >= 768) closeSidebar(); });
 
   // ───────── Share / Export ─────────
   function shareWhatsAppDirect(id) {
